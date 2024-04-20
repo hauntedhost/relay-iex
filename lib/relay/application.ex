@@ -9,7 +9,7 @@ defmodule Relay.Application do
   def start(_type, _args) do
     children = [
       RelayWeb.Telemetry,
-      Relay.Repo,
+      # Relay.Repo,
       {DNSCluster, query: Application.get_env(:relay, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Relay.PubSub},
       # Start a worker by calling: Relay.Worker.start_link(arg)

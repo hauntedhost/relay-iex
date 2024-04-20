@@ -1,12 +1,15 @@
 defmodule RelayWeb.Router do
   use RelayWeb, :router
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :browser do
+    plug :accepts, ["html", "text/plain"]
   end
 
-  scope "/api", RelayWeb do
-    pipe_through :api
+  scope "/", RelayWeb do
+    pipe_through :browser
+
+    get("/", RootController, :ping)
+    get("/health", RootController, :health)
   end
 
   # Enable LiveDashboard in development
