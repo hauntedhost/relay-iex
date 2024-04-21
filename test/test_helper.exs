@@ -1,2 +1,4 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Relay.Repo, :manual)
+
+# NOTE: repo-disabled
+# Ecto.Adapters.SQL.Sandbox.mode(Relay.Repo, :manual)

@@ -2,4 +2,6 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
+
+# NOTE: repo-disabled
 # exec ./relay eval Relay.Release.migrate
