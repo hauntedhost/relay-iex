@@ -4,17 +4,23 @@ defmodule RelayWeb.RelayChannel do
   @impl true
   def join("relay:lobby", payload, socket) do
     if authorized?(payload) do
-      response =
-        Map.merge(payload || %{}, %{
-          user: socket.join_ref,
-          message: "-",
-          event: "joined"
-        })
-
-      {:ok, response, socket}
+      send(self(), :after_join)
+      {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
+  end
+
+  @impl true
+  def handle_info(:after_join, socket) do
+    response = %{
+      user: socket.join_ref,
+      event: "joined",
+      message: ""
+    }
+
+    broadcast(socket, "joined", response)
+    {:noreply, socket}
   end
 
   # Channels can be used in a request/response fashion
@@ -28,13 +34,11 @@ defmodule RelayWeb.RelayChannel do
   # broadcast to everyone in the current topic (relay:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
-    response = %{
-      response:
-        Map.merge(payload, %{
-          user: socket.ref,
-          event: "shout"
-        })
-    }
+    response =
+      Map.merge(payload, %{
+        user: socket.ref,
+        event: "shout"
+      })
 
     broadcast(socket, "shout", response)
     {:noreply, socket}
