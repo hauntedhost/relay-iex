@@ -57,7 +57,6 @@ defmodule RelayWeb.RelayChannel do
     response =
       Map.merge(payload, %{
         user: user,
-        username: user.username,
         event: "shout"
       })
 
@@ -77,17 +76,15 @@ defmodule RelayWeb.RelayChannel do
     true
   end
 
+  defp assign_user(socket, payload) do
+    assign(socket, :user, build_user(payload))
+  end
+
   defp build_user(%{"user" => user}) do
     %{
       uuid: user["uuid"],
       username: user["username"]
     }
-  end
-
-  defp assign_user(socket, payload) do
-    user = build_user(payload)
-    users = Map.put(socket.assigns[:users] || %{}, user.uuid, user)
-    assign(socket, %{user: user, users: users})
   end
 
   defp get_user(socket) do
