@@ -5,16 +5,31 @@ defmodule RelayWeb.RelayChannel do
   alias RelayWeb.Presence
 
   @impl true
-  def join("relay:lobby", %{"user" => %{}} = payload, socket) do
+  def join("relay:" <> room, %{"user" => %{}} = payload, socket) do
     Logger.info(%{
       event: "join",
+      room: room,
       payload: payload,
       socket: socket
     })
 
     if authorized?(payload) do
       send(self(), :after_join)
-      {:ok, assign_user(socket, payload)}
+
+      user = build_user(payload)
+
+      response = %{
+        user: user,
+        event: "phx_join"
+      }
+
+      socket =
+        assign(socket, %{
+          user: user,
+          room: room
+        })
+
+      {:ok, response, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -29,13 +44,7 @@ defmodule RelayWeb.RelayChannel do
 
     # Track this user in the Presence data
     user = socket.assigns.user
-
-    {:ok, _} =
-      Presence.track(socket, user.uuid, %{
-        uuid: user.uuid,
-        username: user.username,
-        online_at: inspect(System.system_time(:second))
-      })
+    {:ok, _} = Presence.track(socket, user.uuid, user)
 
     broadcast(socket, "presence_state", Presence.list(socket))
 
@@ -76,14 +85,11 @@ defmodule RelayWeb.RelayChannel do
     true
   end
 
-  defp assign_user(socket, payload) do
-    assign(socket, :user, build_user(payload))
-  end
-
   defp build_user(%{"user" => user}) do
     %{
       uuid: user["uuid"],
-      username: user["username"]
+      username: user["username"],
+      online_at: System.system_time(:second)
     }
   end
 
