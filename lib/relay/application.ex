@@ -4,6 +4,7 @@ defmodule Relay.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
   @impl true
   def start(_type, _args) do
@@ -11,6 +12,7 @@ defmodule Relay.Application do
       RelayWeb.Telemetry,
       # NOTE: repo-disabled
       # Relay.Repo,
+      Relay.Redis,
       {DNSCluster, query: Application.get_env(:relay, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Relay.PubSub},
       RelayWeb.Presence,

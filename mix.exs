@@ -32,16 +32,17 @@ defmodule Relay.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bandit, "~> 1.2"},
+      {:dns_cluster, "~> 0.1.1"},
+      {:ecto_sql, "~> 3.10"},
+      {:jason, "~> 1.2"},
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:postgrex, ">= 0.0.0"},
+      {:redix, "~> 1.5"},
       {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
-      {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.2"}
+      {:telemetry_poller, "~> 1.0"}
     ]
   end
 

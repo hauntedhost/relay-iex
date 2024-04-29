@@ -1,5 +1,10 @@
 import Config
 
+config :relay, Relay.Redis,
+  host: "localhost",
+  name: :redix,
+  port: 6379
+
 # Configure your database
 config :relay, Relay.Repo,
   username: "postgres",

@@ -6,21 +6,14 @@ defmodule RelayWeb.RelayChannel do
 
   @impl true
   def join("relay:" <> room, %{"user" => %{}} = payload, socket) do
-    Logger.info(%{
-      event: "join",
-      room: room,
-      payload: payload,
-      socket: socket
-    })
-
     if authorized?(payload) do
       send(self(), :after_join)
 
       user = build_user(payload)
 
       response = %{
-        user: user,
-        event: "phx_join"
+        event: "phx_join",
+        user: user
       }
 
       socket =
@@ -37,13 +30,9 @@ defmodule RelayWeb.RelayChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    Logger.info(%{
-      event: ":after_join",
-      socket: socket
-    })
+    %{room: room, user: user} = socket.assigns
 
-    # Track this user in the Presence data
-    user = socket.assigns.user
+    Relay.Redis.add_user_to_room(room, user)
     {:ok, _} = Presence.track(socket, user.uuid, user)
 
     broadcast(socket, "presence_state", Presence.list(socket))
@@ -55,18 +44,12 @@ defmodule RelayWeb.RelayChannel do
   # broadcast to everyone in the current topic (relay:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
-    Logger.info(%{
-      event: "shout",
-      payload: payload,
-      socket: socket
-    })
-
     user = get_user(socket)
 
     response =
       Map.merge(payload, %{
-        user: user,
-        event: "shout"
+        event: "shout",
+        user: user
       })
 
     broadcast(socket, "shout", response)

@@ -21,6 +21,15 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
+  config :relay, Relay.Redis,
+    host: System.fetch_env!("REDIS_HOST"),
+    password: System.fetch_env!("REDIS_PASSWORD"),
+    port: System.fetch_env!("REDIS_PORT") |> String.to_integer(),
+    name: :redix,
+    socket_opts: [:inet6],
+    sync_connect: true,
+    timeout: 30_000
+
   # NOTE: repo-disabled
   # database_url =
   #   System.get_env("DATABASE_URL") ||
