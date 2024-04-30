@@ -5,26 +5,28 @@ defmodule RelayWeb.RelayChannel do
   alias RelayWeb.Presence
 
   @impl true
-  def join("relay:" <> room, %{"user" => %{}} = payload, socket) do
-    if authorized?(payload) do
-      send(self(), :after_join)
+  def join("relay:" <> room, %{"user" => %{"username" => username}} = payload, socket) do
+    case validate_join(room, username) do
+      :ok ->
+        send(self(), :after_join)
 
-      user = build_user(payload)
+        user = build_user(payload)
 
-      response = %{
-        event: "phx_join",
-        user: user
-      }
+        response = %{
+          event: "phx_join",
+          user: user
+        }
 
-      socket =
-        assign(socket, %{
-          user: user,
-          room: room
-        })
+        socket =
+          assign(socket, %{
+            user: user,
+            room: room
+          })
 
-      {:ok, response, socket}
-    else
-      {:error, %{reason: "unauthorized"}}
+        {:ok, response, socket}
+
+      {:error, reason} ->
+        {:error, %{reason: reason}}
     end
   end
 
@@ -63,11 +65,6 @@ defmodule RelayWeb.RelayChannel do
     {:reply, {:ok, payload}, socket}
   end
 
-  # Add authorization logic here as required.
-  defp authorized?(_payload) do
-    true
-  end
-
   defp build_user(%{"user" => user}) do
     %{
       uuid: user["uuid"],
@@ -78,5 +75,28 @@ defmodule RelayWeb.RelayChannel do
 
   defp get_user(socket) do
     socket.assigns.user
+  end
+
+  defp validate_join(room, username) do
+    with :ok <- validate_room(room),
+         :ok <- validate_username(username) do
+      :ok
+    end
+  end
+
+  defp validate_room(room) do
+    if String.length(room) in 3..20 do
+      :ok
+    else
+      {:error, "room length must be between 3 and 20 characters"}
+    end
+  end
+
+  defp validate_username(username) do
+    if String.length(username) in 3..20 do
+      :ok
+    else
+      {:error, "username length must be between 3 and 20 characters"}
+    end
   end
 end
