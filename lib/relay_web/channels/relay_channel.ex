@@ -31,20 +31,6 @@ defmodule RelayWeb.RelayChannel do
   end
 
   @impl true
-  def handle_info(:after_join, socket) do
-    %{room: room, user: user} = socket.assigns
-
-    Relay.Redis.add_user_to_room(room, user)
-    {:ok, _} = Presence.track(socket, user.uuid, user)
-
-    broadcast(socket, "presence_state", Presence.list(socket))
-
-    {:noreply, socket}
-  end
-
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (relay:lobby).
-  @impl true
   def handle_in("shout", payload, socket) do
     user = get_user(socket)
 
@@ -58,11 +44,21 @@ defmodule RelayWeb.RelayChannel do
     {:noreply, socket}
   end
 
-  # Channels can be used in a request/response fashion
-  # by sending replies to requests from the client
   @impl true
   def handle_in("ping", payload, socket) do
     {:reply, {:ok, payload}, socket}
+  end
+
+  @impl true
+  def handle_info(:after_join, socket) do
+    %{room: room, user: user} = socket.assigns
+
+    Relay.Redis.add_user_to_room(room, user)
+    {:ok, _} = Presence.track(socket, user.uuid, user)
+
+    broadcast(socket, "presence_state", Presence.list(socket))
+
+    {:noreply, socket}
   end
 
   defp build_user(%{"user" => user}) do
