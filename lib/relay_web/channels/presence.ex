@@ -4,6 +4,9 @@ defmodule RelayWeb.Presence do
     pubsub_server: Relay.PubSub
 
   require Logger
+  alias Relay.Redis
+
+  @pinned_rooms ~w(lobby qac)
 
   @impl true
   def init(_opts), do: {:ok, %{}}
@@ -13,23 +16,26 @@ defmodule RelayWeb.Presence do
     join_user_ids = Map.keys(diff.joins)
     leave_user_ids = Map.keys(diff.leaves)
 
-    Relay.Redis.add_users_to_room(room, join_user_ids)
-    Relay.Redis.remove_users_from_room(room, leave_user_ids)
+    Redis.add_users_to_room(room, join_user_ids)
+    Redis.remove_users_from_room(room, leave_user_ids)
 
-    rooms = Relay.Redis.list_rooms_with_user_counts()
+    rooms_with_user_counts =
+      Enum.reduce(@pinned_rooms, Redis.list_rooms_with_user_counts(), fn pinned_room, acc ->
+        Map.put_new(acc, pinned_room, 0)
+      end)
 
-    room_names_with_counts =
-      Enum.map(rooms, fn {room, user_count} ->
+    room_names = Map.keys(rooms_with_user_counts)
+
+    rooms_payload =
+      Enum.map(rooms_with_user_counts, fn {room, user_count} ->
         [room, user_count]
       end)
 
-    room_names = Map.keys(rooms)
-
-    Logger.debug("broadcasting rooms_update to all rooms: #{inspect(rooms)}")
+    Logger.debug("broadcasting rooms_update to all rooms: #{inspect(rooms_with_user_counts)}")
 
     Enum.each(room_names, fn room ->
       RelayWeb.Endpoint.broadcast("relay:#{room}", "rooms_update", %{
-        rooms: room_names_with_counts
+        rooms: rooms_payload
       })
     end)
 
