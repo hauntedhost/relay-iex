@@ -20,18 +20,20 @@ defmodule RelayWeb.Presence do
       "handle_metas for ##{current_room}: joins=#{inspect(join_user_ids)} leaves=#{inspect(leave_user_ids)}"
     )
 
-    # TODO: Remove Redis add/remove users implementation, it's unnecessary
-    # Redis.add_users_to_room(current_room, join_user_ids)
-    # Redis.remove_users_from_room(current_room, leave_user_ids)
+    Redis.add_room!(current_room)
+    redis_rooms = Redis.list_rooms!()
 
-    rooms_list = Redis.list_rooms()
+    # Add current_room to @pinned_rooms set
+    pinned_rooms = MapSet.put(@pinned_rooms, current_room)
 
     rooms_with_pinned =
-      @pinned_rooms
-      |> Enum.reduce(MapSet.new(rooms_list), fn pinned_room, acc ->
+      pinned_rooms
+      |> Enum.reduce(MapSet.new(redis_rooms), fn pinned_room, acc ->
         MapSet.put(acc, pinned_room)
       end)
       |> MapSet.to_list()
+
+    Logger.debug("rooms: #{inspect(rooms_with_pinned)}")
 
     Task.start(fn ->
       # TODO: enqueue a job to remove inactive rooms
@@ -40,7 +42,7 @@ defmodule RelayWeb.Presence do
           users = get_users_in_room(room)
           user_count = Enum.count(users)
 
-          if user_count > 0 || MapSet.member?(@pinned_rooms, room) do
+          if user_count > 0 || MapSet.member?(pinned_rooms, room) do
             [[room, user_count] | acc]
           else
             acc

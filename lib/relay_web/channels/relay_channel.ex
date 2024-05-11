@@ -51,11 +51,9 @@ defmodule RelayWeb.RelayChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    %{room: room, user: user} = socket.assigns
+    %{room: _room, user: user} = socket.assigns
 
-    Relay.Redis.add_user_to_room(room, user)
     {:ok, _} = Presence.track(socket, user.uuid, user)
-
     broadcast(socket, "presence_state", Presence.list(socket))
 
     {:noreply, socket}
@@ -76,6 +74,7 @@ defmodule RelayWeb.RelayChannel do
   defp validate_join(room, username) do
     with :ok <- validate_room(room),
          :ok <- validate_username(username) do
+      # {:error, "test: refuse join"}
       :ok
     end
   end
