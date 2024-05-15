@@ -2,17 +2,33 @@ defmodule RelayWeb.Router do
   use RelayWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html", "text/plain"]
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {RelayWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
+  pipeline :api do
+    plug :accepts, ["json"]
   end
 
   scope "/", RelayWeb do
     pipe_through :browser
 
+    get("/", PageController, :home)
+    get("/health", PageController, :health)
+  end
+
+  scope "/api", RelayWeb.Api do
+    pipe_through :api
+
     get("/", RootController, :ping)
     get("/health", RootController, :health)
   end
 
-  # Enable LiveDashboard in development
+  # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:relay, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
     # it behind authentication and allow only admins to access it.
@@ -22,9 +38,10 @@ defmodule RelayWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through [:fetch_session, :protect_from_forgery]
+      pipe_through :browser
 
       live_dashboard "/dashboard", metrics: RelayWeb.Telemetry
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

@@ -17,8 +17,14 @@ config :relay, Relay.Repo,
 # you can enable the server option below.
 config :relay, RelayWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "EkWGPQQBjohyCw+VtNBufAUU+YmXH8puv4pHlu2lLRsxp2m52cGy8ujZoOmPP3d8",
+  secret_key_base: "3TkVGDV/m2f65aiBK/FpqMSDwmhUNkyxH8ruPus9xSnv1WTUN50ogE5eu7rLaVZ1",
   server: false
+
+# In test we don't send emails.
+config :relay, Relay.Mailer, adapter: Swoosh.Adapters.Test
+
+# Disable swoosh api client as it is only required for production adapters.
+config :swoosh, :api_client, false
 
 # Print only warnings and errors during test
 config :logger, level: :warning

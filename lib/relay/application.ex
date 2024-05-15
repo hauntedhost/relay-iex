@@ -4,17 +4,18 @@ defmodule Relay.Application do
   @moduledoc false
 
   use Application
-  require Logger
 
   @impl true
   def start(_type, _args) do
     children = [
       RelayWeb.Telemetry,
-      Relay.Repo,
       Relay.Redis,
+      Relay.Repo,
       {DNSCluster, query: Application.get_env(:relay, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Relay.PubSub},
       RelayWeb.Presence,
+      # Start the Finch HTTP client for sending emails
+      {Finch, name: Relay.Finch},
       # Start a worker by calling: Relay.Worker.start_link(arg)
       # {Relay.Worker, arg},
       # Start to serve requests, typically the last entry
