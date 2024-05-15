@@ -58,9 +58,8 @@ defmodule Relay.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: [
-        # NOTE: repo-disabled
-        # "ecto.create --quiet",
-        # "ecto.migrate --quiet",
+        "ecto.create --quiet",
+        "ecto.migrate --quiet",
         "test"
       ]
     ]

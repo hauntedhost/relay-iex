@@ -27,11 +27,10 @@ defmodule Relay.DataCase do
     end
   end
 
-  # NOTE: repo-disabled
-  # setup tags do
-  #   Relay.DataCase.setup_sandbox(tags)
-  #   :ok
-  # end
+  setup tags do
+    Relay.DataCase.setup_sandbox(tags)
+    :ok
+  end
 
   @doc """
   Sets up the sandbox based on the test tags.

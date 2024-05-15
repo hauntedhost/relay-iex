@@ -28,9 +28,8 @@ defmodule RelayWeb.ChannelCase do
     end
   end
 
-  # NOTE: repo-disabled
-  # setup tags do
-  #   Relay.DataCase.setup_sandbox(tags)
-  #   :ok
-  # end
+  setup tags do
+    Relay.DataCase.setup_sandbox(tags)
+    :ok
+  end
 end

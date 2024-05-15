@@ -31,9 +31,8 @@ defmodule RelayWeb.ConnCase do
     end
   end
 
-  # NOTE: repo-disabled
-  # setup tags do
-  #   Relay.DataCase.setup_sandbox(tags)
-  #   {:ok, conn: Phoenix.ConnTest.build_conn()}
-  # end
+  setup tags do
+    Relay.DataCase.setup_sandbox(tags)
+    {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
 end
