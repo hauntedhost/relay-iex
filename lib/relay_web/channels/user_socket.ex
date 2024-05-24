@@ -8,7 +8,8 @@ defmodule RelayWeb.UserSocket do
 
   ## Channels
 
-  channel "relay:*", RelayWeb.RelayChannel
+  channel "chat:*", RelayWeb.ChatChannel
+  channel "game:*", RelayWeb.GameChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

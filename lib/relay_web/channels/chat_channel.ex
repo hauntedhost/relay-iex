@@ -1,11 +1,11 @@
-defmodule RelayWeb.RelayChannel do
+defmodule RelayWeb.ChatChannel do
   use RelayWeb, :channel
   require Logger
 
   alias RelayWeb.Presence
 
   @impl true
-  def join("relay:" <> room, %{"user" => %{"username" => username}} = payload, socket) do
+  def join("chat:" <> room, %{"user" => %{"username" => username}} = payload, socket) do
     case validate_join(room, username) do
       :ok ->
         send(self(), :after_join)
@@ -74,7 +74,6 @@ defmodule RelayWeb.RelayChannel do
   defp validate_join(room, username) do
     with :ok <- validate_room(room),
          :ok <- validate_username(username) do
-      # {:error, "test: refuse join"}
       :ok
     end
   end

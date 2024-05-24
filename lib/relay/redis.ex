@@ -17,27 +17,23 @@ defmodule Relay.Redis do
     }
   end
 
-  @rooms_key "rooms"
-
-  def room_value("room:" <> room_value), do: room_value
-  def room_value(room), do: room
-
-  def add_room!(room) do
-    Logger.debug("Adding ##{room_value(room)} to rooms")
-    command!(["SADD", @rooms_key, room_value(room)])
+  def command(command) do
+    Redix.command(:redix, command)
   end
 
-  def remove_room!(room) do
-    Logger.debug("Removing ##{room_value(room)} from rooms")
-    command!(["SREM", @rooms_key, room_value(room)])
-  end
-
-  def list_rooms!() do
-    command!(["SMEMBERS", @rooms_key])
-  end
-
-  defp command!(command) do
-    {:ok, result} = Redix.command(:redix, command)
+  def command!(command) do
+    {:ok, result} = command(command)
     result
+  end
+
+  def scan_keys!(pattern), do: scan_keys!(pattern, "0", [])
+
+  # Private
+
+  defp scan_keys!(pattern, cursor, acc) do
+    case command!(["SCAN", cursor, "MATCH", pattern]) do
+      ["0", keys] -> acc ++ keys
+      [new_cursor, keys] -> scan_keys!(pattern, new_cursor, acc ++ keys)
+    end
   end
 end
