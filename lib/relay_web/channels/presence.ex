@@ -4,14 +4,16 @@ defmodule RelayWeb.Presence do
     pubsub_server: Relay.PubSub
 
   require Logger
-  alias Relay.Redis
+
+  alias Relay.Chats
+  alias Relay.Games
 
   @impl true
   def init(_opts), do: {:ok, %{}}
 
   @impl true
   def fetch("game:" <> _, presences) do
-    players = Map.new(Redis.get_all_players(), fn player -> {player.uuid, player} end)
+    players = Map.new(Games.get_all_players(), fn player -> {player.uuid, player} end)
 
     for {player_uuid, %{metas: metas}} <- presences, into: %{} do
       {player_uuid, %{metas: metas, player: Map.get(players, player_uuid)}}
@@ -24,7 +26,7 @@ defmodule RelayWeb.Presence do
   @pinned_rooms MapSet.new(~w(lobby qac))
 
   @impl true
-  def handle_metas("relay:" <> current_room, diff, _presences, state) do
+  def handle_metas("chat:" <> current_room, diff, _presences, state) do
     join_user_ids = Map.keys(diff.joins)
     leave_user_ids = Map.keys(diff.leaves)
 
@@ -32,8 +34,8 @@ defmodule RelayWeb.Presence do
       "handle_metas for ##{current_room}: joins=#{inspect(join_user_ids)} leaves=#{inspect(leave_user_ids)}"
     )
 
-    Redis.add_room!(current_room)
-    redis_rooms = Redis.list_rooms!()
+    Chats.add_room!(current_room)
+    redis_rooms = Chats.list_rooms!()
 
     # Add current_room to @pinned_rooms set
     pinned_rooms = MapSet.put(@pinned_rooms, current_room)
@@ -66,7 +68,7 @@ defmodule RelayWeb.Presence do
       Enum.each(active_rooms_payload, fn [room, _user_count] ->
         Logger.debug("broadcasting rooms_update to ##{room}")
 
-        RelayWeb.Endpoint.broadcast("relay:#{room}", "rooms_update", %{
+        RelayWeb.Endpoint.broadcast("chat:#{room}", "rooms_update", %{
           rooms: active_rooms_payload
         })
       end)
@@ -99,7 +101,7 @@ defmodule RelayWeb.Presence do
   # For now we just take the first user presence from metas. In the future, if something like auth is introduced and
   # single users can be logged into multiple devices, we'll have to track each presence distinctly.
   defp get_users_in_room(room) do
-    "relay:#{room}"
+    "chat:#{room}"
     |> list()
     |> Enum.map(fn {_uuid, %{metas: [user | _]}} ->
       user

@@ -5,7 +5,7 @@ defmodule RelayWeb.RelayChannelTest do
     {:ok, _, socket} =
       RelayWeb.UserSocket
       |> socket("user_id", %{some: :assign})
-      |> subscribe_and_join(RelayWeb.RelayChannel, "relay:lobby")
+      |> subscribe_and_join(RelayWeb.RelayChannel, "chat:lobby")
 
     %{socket: socket}
   end
@@ -15,7 +15,7 @@ defmodule RelayWeb.RelayChannelTest do
     assert_reply ref, :ok, %{"hello" => "there"}
   end
 
-  test "shout broadcasts to relay:lobby", %{socket: socket} do
+  test "shout broadcasts to chat:lobby", %{socket: socket} do
     push(socket, "shout", %{"hello" => "all"})
     assert_broadcast "shout", %{"hello" => "all"}
   end

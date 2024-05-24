@@ -2,8 +2,9 @@ defmodule RelayWeb.GameChannel do
   use RelayWeb, :channel
   require Logger
 
+  alias Relay.Games
+  alias Relay.Games.Player
   alias RelayWeb.Presence
-  alias Relay.Redis.Player
 
   @impl true
   def join("game:" <> game, %{"player" => payload}, socket) do
@@ -28,7 +29,7 @@ defmodule RelayWeb.GameChannel do
   @impl true
   def handle_info(:after_join_game, socket) do
     with %{player: player} <- socket.assigns,
-         {:ok, _} <- Relay.Redis.add_player(player),
+         {:ok, _} <- Games.add_player(player),
          {:ok, _} <- Presence.track(socket, player.uuid, build_player_presence(player)),
          :ok <- broadcast(socket, "presence_state", Presence.list(socket)) do
       {:noreply, socket}
@@ -37,8 +38,8 @@ defmodule RelayWeb.GameChannel do
 
   @impl true
   def handle_in("player_update", %{"player_uuid" => uuid, "position" => position}, socket) do
-    with {:ok, player} <- Relay.Redis.get_player(uuid),
-         {:ok, _} <- Relay.Redis.add_player(%{player | position: position}) do
+    with {:ok, player} <- Games.get_player(uuid),
+         {:ok, _} <- Games.add_player(%{player | position: position}) do
       :ok = broadcast(socket, "player_update", %{player_uuid: uuid, position: position})
       {:noreply, socket}
     end
