@@ -4,6 +4,8 @@ defmodule RelayWeb.RelayChannel do
 
   alias RelayWeb.Presence
 
+  # TODO: Rename this to ChatChannel
+
   @impl true
   def join("relay:" <> room, %{"user" => %{"username" => username}} = payload, socket) do
     case validate_join(room, username) do
@@ -74,7 +76,6 @@ defmodule RelayWeb.RelayChannel do
   defp validate_join(room, username) do
     with :ok <- validate_room(room),
          :ok <- validate_username(username) do
-      # {:error, "test: refuse join"}
       :ok
     end
   end

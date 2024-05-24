@@ -6,10 +6,22 @@ defmodule RelayWeb.Presence do
   require Logger
   alias Relay.Redis
 
-  @pinned_rooms MapSet.new(~w(lobby qac))
-
   @impl true
   def init(_opts), do: {:ok, %{}}
+
+  @impl true
+  def fetch("game:" <> _, presences) do
+    players = Map.new(Redis.get_all_players(), fn player -> {player.uuid, player} end)
+
+    for {player_uuid, %{metas: metas}} <- presences, into: %{} do
+      {player_uuid, %{metas: metas, player: Map.get(players, player_uuid)}}
+    end
+  end
+
+  @impl true
+  def fetch(_topic, presences), do: presences
+
+  @pinned_rooms MapSet.new(~w(lobby qac))
 
   @impl true
   def handle_metas("relay:" <> current_room, diff, _presences, state) do
@@ -60,6 +72,11 @@ defmodule RelayWeb.Presence do
       end)
     end)
 
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_metas(_topic, _diff, _presences, state) do
     {:ok, state}
   end
 
